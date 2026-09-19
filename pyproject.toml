@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "template-fastapi-service"
-version = "0.0.1"
+version = "0.0.0"
 description = "A minimal FastAPI service template baseline."
 readme = "README.md"
 requires-python = ">=3.14"

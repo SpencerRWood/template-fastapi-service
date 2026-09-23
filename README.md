@@ -81,13 +81,8 @@ docker compose up --build
 
 The API listens on `http://localhost:8000`.
 
-Run backend checks inside the container:
-
-```sh
-docker compose run --rm api uv run pytest
-docker compose run --rm api uv run ruff check .
-docker compose run --rm api uv run mypy
-```
+The container uses the production runtime. Run development checks with `uv run`
+on the host as shown above.
 
 The compose file intentionally includes only the API service. Add databases,
 caches, workers, or proxies only when a real project needs them.
@@ -111,13 +106,35 @@ validates mypy, pytest, Docker Compose configuration, and pre-commit before
 python-semantic-release runs with conventional commits and tags like `v0.0.1`.
 Ruff linting and formatting run through pre-commit.
 
-## Copy And Rename
+## Automatic dev deployment
 
-After copying this template, replace these names everywhere:
+Pull requests use centralized validation. After a merge to `main`, the shared
+workflow creates a semantic release, publishes an immutable GHCR image, and
+opens an infrastructure promotion PR for its digest-qualified reference.
+Infrastructure validates and automatically merges that PR, makes its patch
+release, and deploys to dev. The application repository only publishes the
+image and requests promotion; infrastructure owns the dev image pin, Compose,
+Ansible, runtime secrets, migrations, health checks, and deployment policy.
 
-- project name: `template-fastapi-service`
-- package name: `template_fastapi_service`
+Before the first deployment, onboard the application in
+`SpencerRWood/infrastructure`: add `<app>_image_ref` to `environments/dev.yml`,
+the service and Compose definition, Ansible/runtime configuration and secrets,
+plus migrations, health checks, and ingress where applicable. Set the initial
+image pin to a valid digest-qualified image. This is a separate infrastructure
+change; the template does not create it.
 
+Add the generated repository secret `INFRASTRUCTURE_PR_TOKEN`: a fine-grained
+token scoped only to `SpencerRWood/infrastructure` with Contents read/write,
+Pull requests read/write, Commit statuses read, and Metadata read. Do not
+commit the token. The promotion workflow consumes it through its standard
+`infrastructure_token` mapping.
 
-Then update package metadata in `pyproject.toml`, refresh `uv.lock` with
-`uv lock`, run `uv sync --frozen --group dev`, and run the baseline checks.
+## Copy and rename
+
+After creating a repository from this template, run
+`python3 scripts/rename_project.py customer-api`, replacing `customer-api`
+with your lowercase repository slug. The script reads the existing
+`pyproject.toml` project name and updates the package, lockfile, Dockerfile,
+workflow `image_name`, and snake-case `image_key` together. Use the same slug
+for the GitHub repository. Then run `uv lock`, `uv sync --frozen --group dev`,
+and the baseline checks.

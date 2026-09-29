@@ -101,16 +101,17 @@ implementation as the copied project grows.
 
 ## Build And Release
 
-The package builds with Hatchling through `uv build`. The release workflow
-validates mypy, pytest, Docker Compose configuration, and pre-commit before
-python-semantic-release runs with conventional commits and tags like `v0.0.1`.
-Ruff linting and formatting run through pre-commit.
+The package builds with Hatchling through `uv build`. The shared v3 release
+workflow validates mypy, pytest, Docker Compose configuration, and pre-commit,
+then builds and verifies the container before python-semantic-release publishes
+a Git tag and GitHub Release. Ruff linting and formatting run through pre-commit.
 
 ## Automatic dev deployment
 
 Pull requests use centralized validation. After a merge to `main`, the shared
-workflow creates a semantic release, publishes an immutable GHCR image, and
-opens an infrastructure promotion PR for its digest-qualified reference.
+workflow validates and publishes an immutable GHCR image, creates a semantic
+release, and opens an infrastructure promotion PR for its digest-qualified
+reference.
 Infrastructure validates and automatically merges that PR, makes its patch
 release, and deploys to dev. The application repository only publishes the
 image and requests promotion; infrastructure owns the dev image pin, Compose,
@@ -135,6 +136,7 @@ After creating a repository from this template, run
 `python3 scripts/rename_project.py customer-api`, replacing `customer-api`
 with your lowercase repository slug. The script reads the existing
 `pyproject.toml` project name and updates the package, lockfile, Dockerfile,
-workflow `image_name`, and snake-case `image_key` together. Use the same slug
-for the GitHub repository. Then run `uv lock`, `uv sync --frozen --group dev`,
+release configuration `image_name`, and snake-case `image_key` together. Use
+the same slug for the GitHub repository. Then run `uv lock`,
+`uv sync --frozen --group dev`,
 and the baseline checks.

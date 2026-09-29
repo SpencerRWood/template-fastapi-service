@@ -22,19 +22,27 @@ def test_generated_customer_api_deployment(tmp_path: Path) -> None:
     runpy.run_path(str(project / "scripts/rename_project.py"))["main"]("customer-api")
 
     metadata = tomllib.loads((project / "pyproject.toml").read_text())
+    release_config = tomllib.loads((project / ".github/release.toml").read_text())
     assert metadata["project"]["name"] == "customer-api"
     assert (project / "src/customer_api/main.py").is_file()
+    assert release_config["container"] == {
+        "publish": True,
+        "image_name": "customer-api",
+    }
     workflow = (project / ".github/workflows/release.yml").read_text()
     parsed = yaml.safe_load(workflow)
     jobs = parsed["jobs"]
-    assert jobs["release"]["uses"].endswith("/release.yml@v1")
-    assert jobs["container"]["uses"].endswith("/container-release.yml@v1")
+    assert jobs["release"]["uses"].endswith("/release-container.yml@v3")
+    assert jobs["release"]["permissions"] == {
+        "contents": "write",
+        "packages": "write",
+    }
+    assert "container" not in jobs
     assert jobs["promotion"]["uses"].endswith("/promote-container-to-dev.yml@v2")
-    assert jobs["container"]["with"]["image_name"] == "customer-api"
     assert jobs["promotion"]["with"]["image_name"] == "customer-api"
     assert jobs["promotion"]["with"]["image_key"] == "customer_api_image_ref"
     assert jobs["promotion"]["with"]["version_image_digest"] == (
-        "${{ needs.container.outputs.version_image_digest }}"
+        "${{ needs.release.outputs.version_image_digest }}"
     )
     assert (
         "INFRASTRUCTURE_PR_TOKEN"
@@ -42,7 +50,7 @@ def test_generated_customer_api_deployment(tmp_path: Path) -> None:
     )
     assert yaml.safe_load((project / ".github/workflows/validate.yml").read_text())[
         "jobs"
-    ]["validation"]["uses"].endswith("/validate.yml@v1")
+    ]["validation"]["uses"].endswith("/validate.yml@v3")
     for forbidden in (
         "environment_file",
         "promotion_branch_prefix",

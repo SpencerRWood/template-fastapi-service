@@ -9,5 +9,9 @@ checks = ["ruff", "ruff-format", "mypy", "pytest", "docker-compose", "pre-commit
 [build]
 python_package = true
 
+[container]
+publish = true
+image_name = "template-fastapi-service"
+
 [release]
 semantic_release = true

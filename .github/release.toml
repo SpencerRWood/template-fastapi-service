@@ -1,17 +1,18 @@
-version = 1
+"version" = 1
 
-[python]
-version = "3.14"
+["python"]
+"version" = "3.14"
 
-[validation]
-checks = ["ruff", "ruff-format", "mypy", "pytest", "docker-compose", "pre-commit"]
+["validation"]
+"checks" = ["ruff", "ruff-format", "mypy", "pytest", "docker-compose", "pre-commit"]
 
-[build]
-python_package = true
+["build"]
+"python_package" = true
 
-[container]
-publish = true
-image_name = "template-fastapi-service"
+["container"]
+"publish" = true
+"image_name" = "template-fastapi-service"
 
-[release]
-semantic_release = true
+["release"]
+"semantic_release" = true
+"tag_merged_commit" = true
